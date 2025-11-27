@@ -88,7 +88,7 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` and login with:
-- Email: `admin@sia.gov`
+- Email: `admin@sia-jpa.org`
 - Password: `admin123` (**change immediately**)
 
 ## Documentation

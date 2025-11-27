@@ -81,10 +81,10 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@sia.gov' },
+    where: { email: 'admin@sia-jpa.org' },
     update: {},
     create: {
-      email: 'admin@sia.gov',
+      email: 'admin@sia-jpa.org',
       passwordHash: adminPassword,
       fullName: 'System Administrator',
       role: UserRole.ADMIN,
@@ -99,10 +99,10 @@ async function main() {
   const liaisonPassword = await bcrypt.hash('liaison123', 12);
 
   const liaison = await prisma.user.upsert({
-    where: { email: 'rtw.liaison@sia.gov' },
+    where: { email: 'rtw.liaison@sia-jpa.org' },
     update: {},
     create: {
-      email: 'rtw.liaison@sia.gov',
+      email: 'rtw.liaison@sia-jpa.org',
       passwordHash: liaisonPassword,
       fullName: 'RTW Liaison',
       role: UserRole.LIAISON,
@@ -117,10 +117,10 @@ async function main() {
   const legalPassword = await bcrypt.hash('legal123', 12);
 
   const legal = await prisma.user.upsert({
-    where: { email: 'legal@sia.gov' },
+    where: { email: 'legal@sia-jpa.org' },
     update: {},
     create: {
-      email: 'legal@sia.gov',
+      email: 'legal@sia-jpa.org',
       passwordHash: legalPassword,
       fullName: 'Legal Counsel',
       role: UserRole.LEGAL,
@@ -135,10 +135,10 @@ async function main() {
   const memberPassword = await bcrypt.hash('member123', 12);
 
   const member = await prisma.user.upsert({
-    where: { email: 'member@sia.gov' },
+    where: { email: 'member@sia-jpa.org' },
     update: {},
     create: {
-      email: 'member@sia.gov',
+      email: 'member@sia-jpa.org',
       passwordHash: memberPassword,
       fullName: 'John Doe',
       role: UserRole.MEMBER,
@@ -207,10 +207,10 @@ Best Practices:
 
   console.log('\n🎉 Database seeding completed successfully!\n');
   console.log('📝 Default login credentials:');
-  console.log('   Admin: admin@sia.gov / admin123');
-  console.log('   RTW Liaison: rtw.liaison@sia.gov / liaison123');
-  console.log('   Legal Counsel: legal@sia.gov / legal123');
-  console.log('   Sample Member: member@sia.gov / member123');
+  console.log('   Admin: admin@sia-jpa.org / admin123');
+  console.log('   RTW Liaison: rtw.liaison@sia-jpa.org / liaison123');
+  console.log('   Legal Counsel: legal@sia-jpa.org / legal123');
+  console.log('   Sample Member: member@sia-jpa.org / member123');
   console.log('\n⚠️  IMPORTANT: Change these passwords immediately in production!\n');
 }
 

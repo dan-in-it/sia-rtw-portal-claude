@@ -168,10 +168,10 @@ async function main() {
   const adminPassword = await bcrypt.hash('admin123', 12); // Change this!
 
   await prisma.user.upsert({
-    where: { email: 'admin@sia.gov' },
+    where: { email: 'admin@sia-jpa.org' },
     update: {},
     create: {
-      email: 'admin@sia.gov',
+      email: 'admin@sia-jpa.org',
       passwordHash: adminPassword,
       fullName: 'System Administrator',
       role: UserRole.ADMIN,
@@ -220,7 +220,7 @@ npm run dev
 ```
 
 Visit `http://localhost:3000` and login with:
-- Email: `admin@sia.gov`
+- Email: `admin@sia-jpa.org`
 - Password: `admin123` (change this immediately!)
 
 ## Creating SD Member Accounts
@@ -307,8 +307,8 @@ importUsers('./users.csv');
 CSV format:
 ```csv
 email,fullName,department,role
-john.doe@sia.gov,John Doe,Safety Division,MEMBER
-jane.smith@sia.gov,Jane Smith,Legal,LEGAL
+john.doe@sia-jpa.org,John Doe,Safety Division,MEMBER
+jane.smith@sia-jpa.org,Jane Smith,Legal,LEGAL
 ```
 
 ## Chatbot Training Setup
@@ -503,7 +503,7 @@ server {
 -- Change admin password
 UPDATE users
 SET password_hash = crypt('new_secure_password', gen_salt('bf'))
-WHERE email = 'admin@sia.gov';
+WHERE email = 'admin@sia-jpa.org';
 ```
 
 ### 2. Enable HTTPS
