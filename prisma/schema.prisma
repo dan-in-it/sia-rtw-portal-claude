@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  MEMBER
+  LIAISON
+  LEGAL
+  ADMIN
+}
+
+enum EscalationType {
+  LIAISON
+  LEGAL
+}
+
+enum EscalationPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum EscalationStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum DocumentType {
+  COMPLIANCE
+  QA
+  JOB_DESC
+  BRIDGE
+  FORUM_POST
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  fullName     String   @map("full_name")
+  role         UserRole @default(MEMBER)
+  department   String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  lastLogin    DateTime? @map("last_login")
+  isActive     Boolean  @default(true) @map("is_active")
+
+  // Relations
+  posts                  Post[]
+  replies                Reply[]
+  escalationsCreated     Escalation[] @relation("EscalationRequester")
+  escalationsAssigned    Escalation[] @relation("EscalationAssignee")
+  chatbotConversations   ChatbotConversation[]
+  uploadedDocuments      TrainingDocument[]
+  auditLogs              AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  icon        String?
+  sortOrder   Int     @default(0) @map("sort_order")
+
+  // Relations
+  posts Post[]
+
+  @@map("categories")
+}
+
+model Post {
+  id                  String   @id @default(uuid())
+  authorId            String   @map("author_id")
+  categoryId          String   @map("category_id")
+  title               String
+  content             String
+  isResolved          Boolean  @default(false) @map("is_resolved")
+  isPrivate           Boolean  @default(false) @map("is_private")
+  upvotes             Int      @default(0)
+  viewCount           Int      @default(0) @map("view_count")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  approvedForTraining Boolean  @default(false) @map("approved_for_training")
+
+  // Relations
+  author              User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  category            Category @relation(fields: [categoryId], references: [id])
+  replies             Reply[]
+  escalations         Escalation[]
+  trainingDocuments   TrainingDocument[]
+  tags                PostTag[]
+
+  @@index([authorId])
+  @@index([categoryId])
+  @@index([createdAt])
+  @@map("posts")
+}
+
+model Reply {
+  id              String   @id @default(uuid())
+  postId          String   @map("post_id")
+  authorId        String   @map("author_id")
+  parentReplyId   String?  @map("parent_reply_id")
+  content         String
+  isHelpful       Boolean  @default(false) @map("is_helpful")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post            Post    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author          User    @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parentReply     Reply?  @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  childReplies    Reply[] @relation("ReplyThread")
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentReplyId])
+  @@map("replies")
+}
+
+model Tag {
+  id    String @id @default(uuid())
+  name  String @unique
+  color String?
+
+  // Relations
+  posts PostTag[]
+
+  @@map("tags")
+}
+
+model PostTag {
+  postId String @map("post_id")
+  tagId  String @map("tag_id")
+
+  // Relations
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tagId])
+  @@map("post_tags")
+}
+
+model Escalation {
+  id              String              @id @default(uuid())
+  postId          String?             @map("post_id")
+  requesterId     String              @map("requester_id")
+  assignedToId    String?             @map("assigned_to_id")
+  escalationType  EscalationType      @map("escalation_type")
+  priority        EscalationPriority  @default(MEDIUM)
+  status          EscalationStatus    @default(OPEN)
+  description     String
+  resolution      String?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  resolvedAt      DateTime?           @map("resolved_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  // Relations
+  post        Post?  @relation(fields: [postId], references: [id], onDelete: SetNull)
+  requester   User   @relation("EscalationRequester", fields: [requesterId], references: [id])
+  assignedTo  User?  @relation("EscalationAssignee", fields: [assignedToId], references: [id])
+
+  @@index([requesterId])
+  @@index([assignedToId])
+  @@index([status])
+  @@map("escalations")
+}
+
+model ChatbotConversation {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatbotMessage[]
+
+  @@index([userId])
+  @@map("chatbot_conversations")
+}
+
+model ChatbotMessage {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  role           MessageRole
+  content        String
+  sources        Json?    // Store citations/sources as JSON
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  // Relations
+  conversation ChatbotConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("chatbot_messages")
+}
+
+model TrainingDocument {
+  id            String       @id @default(uuid())
+  title         String
+  content       String
+  documentType  DocumentType @map("document_type")
+  sourcePostId  String?      @map("source_post_id")
+  embeddingsId  String?      @map("embeddings_id") // Reference to vector DB ID
+  uploadedById  String       @map("uploaded_by_id")
+  createdAt     DateTime     @default(now()) @map("created_at")
+  isActive      Boolean      @default(true) @map("is_active")
+
+  // Relations
+  sourcePost Post? @relation(fields: [sourcePostId], references: [id], onDelete: SetNull)
+  uploadedBy User  @relation(fields: [uploadedById], references: [id])
+
+  @@index([documentType])
+  @@index([isActive])
+  @@map("training_documents")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?  @map("user_id")
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String?  @map("entity_id")
+  metadata    Json?    // Store additional context
+  ipAddress   String?  @map("ip_address")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
+}
