@@ -78,8 +78,15 @@ npm install
 # Set up environment variables
 cp .env.example .env
 # Edit .env with your configuration
+```
 
-# Set up database
+**Set up PostgreSQL:**
+- See **[DATABASE_SETUP.md](DATABASE_SETUP.md)** for detailed PostgreSQL setup instructions
+- Quick option: Use Docker or Supabase (cloud database)
+- The guide covers Windows, macOS, and Linux setup
+
+```bash
+# After database is configured, run:
 npm run db:push
 npm run db:seed
 
@@ -93,8 +100,10 @@ Visit `http://localhost:3000` and login with:
 
 ## Documentation
 
+- **[Database Setup Guide](DATABASE_SETUP.md)** - PostgreSQL setup for Windows, macOS, Linux
 - **[Implementation Guide](IMPLEMENTATION_GUIDE.md)** - Detailed setup and deployment instructions
 - **[Architecture](ARCHITECTURE.md)** - Technical architecture and design decisions
+- **[Chatbot Training Guide](CHATBOT_TRAINING_GUIDE.md)** - How the AI training feedback loop works
 - **API Documentation** - Coming soon
 - **User Guide** - Coming soon
 
