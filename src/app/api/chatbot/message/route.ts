@@ -7,6 +7,7 @@ import {
   generateChatbotResponse,
   saveMessages,
 } from '@/lib/chatbot';
+import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
 
 const messageSchema = z.object({
@@ -54,9 +55,17 @@ export async function POST(req: NextRequest) {
       sources
     );
 
+    // Get the last message ID (the assistant's response)
+    const messages = await prisma.chatbotMessage.findMany({
+      where: { conversationId },
+      orderBy: { createdAt: 'desc' },
+      take: 1,
+    });
+
     return apiResponse({
       conversationId,
-      message: response,
+      response, // Frontend expects 'response', not 'message'
+      messageId: messages[0]?.id,
       sources,
     });
   } catch (error) {

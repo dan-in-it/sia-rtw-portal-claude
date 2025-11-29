@@ -16,6 +16,7 @@ interface Conversation {
   id: string;
   title: string;
   createdAt: string;
+  updatedAt: string;
 }
 
 export default function ChatbotPage() {
@@ -36,10 +37,48 @@ export default function ChatbotPage() {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    if (session) {
+      fetchConversations();
+    }
+  }, [session]);
+
+  async function fetchConversations() {
+    try {
+      const res = await fetch('/api/chatbot/conversations');
+      if (res.ok) {
+        const data = await res.json();
+        setConversations(data.conversations || []);
+      }
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+    }
+  }
+
+  async function loadConversation(convId: string) {
+    try {
+      const res = await fetch(`/api/chatbot/conversations/${convId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentConversationId(data.id);
+        setMessages(data.messages.map((msg: any) => ({
+          id: msg.id,
+          role: msg.role.toLowerCase() as 'user' | 'assistant',
+          content: msg.content,
+          sources: msg.sources,
+          createdAt: msg.createdAt,
+        })));
+      }
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+    }
+  }
+
   async function handleNewConversation() {
     setCurrentConversationId(null);
     setMessages([]);
     setError('');
+    fetchConversations(); // Refresh list
   }
 
   async function handleSendMessage(e: React.FormEvent) {
@@ -78,6 +117,7 @@ export default function ChatbotPage() {
         // Update conversation ID if this was a new conversation
         if (!currentConversationId) {
           setCurrentConversationId(data.conversationId);
+          fetchConversations(); // Refresh conversation list
         }
 
         // Add assistant message
@@ -135,14 +175,17 @@ export default function ChatbotPage() {
                     conversations.map((conv) => (
                       <button
                         key={conv.id}
-                        onClick={() => setCurrentConversationId(conv.id)}
+                        onClick={() => loadConversation(conv.id)}
                         className={`w-full text-left px-3 py-2 rounded-md text-sm ${
                           currentConversationId === conv.id
                             ? 'bg-blue-50 text-blue-700'
                             : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
-                        {conv.title}
+                        <div className="font-medium truncate">{conv.title}</div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {new Date(conv.updatedAt).toLocaleDateString()}
+                        </div>
                       </button>
                     ))
                   )}
